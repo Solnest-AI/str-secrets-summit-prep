@@ -73,8 +73,20 @@ SOURCES = {
 SOURCES[("Windows", "arm64")] = SOURCES[("Windows", "x64")]     # runs under emulation
 
 
+# A pipe on Windows (Claude's Bash tool) makes Python print in cp1252, which has no check mark.
+# prep.sh sets PYTHONIOENCODING, but importing or running this file directly must not crash.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
+
 def say(ok, text):
-    print(("✅ " if ok else "❌ ") + text, flush=True)
+    mark = "✅ " if ok else "❌ "
+    try:
+        print(mark + text, flush=True)
+    except UnicodeEncodeError:
+        print(("[ok] " if ok else "[!!] ") + text, flush=True)
 
 
 def platform_key():
@@ -289,10 +301,6 @@ def ensure_browser(uv, check=False):
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     check = "--check" in argv
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, ValueError):
-        pass
     fok, fnew = ensure_ffmpeg(check)
     bok, bnew = ensure_browser(os.environ.get("PREP_UV") or shutil.which("uv"), check)
     if not (fok and bok):

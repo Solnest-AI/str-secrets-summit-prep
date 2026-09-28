@@ -97,6 +97,20 @@ class ExitCodes(unittest.TestCase):
         dl.assert_not_called()
 
 
+class WindowsConsole(unittest.TestCase):
+    def test_a_cp1252_console_never_crashes_on_the_check_mark(self):
+        # Windows, stdout piped by Claude's Bash tool, prep.py run directly: cp1252 (2026-09-28).
+        raw = io.BytesIO()
+        cp1252 = io.TextIOWrapper(raw, encoding="cp1252", errors="strict")
+        with mock.patch.object(sys, "stdout", cp1252):
+            prep.say(True, "ffmpeg 8.1")
+            prep.say(False, "headless browser")
+            cp1252.flush()
+        out = raw.getvalue().decode("cp1252")
+        self.assertIn("[ok] ffmpeg 8.1", out)
+        self.assertIn("[!!] headless browser", out)
+
+
 class Script(unittest.TestCase):
     def test_prep_sh_parses_and_points_nowhere_it_cannot_reach(self):
         self.assertEqual(subprocess.run(["bash", "-n", str(ROOT / "prep.sh")]).returncode, 0)
