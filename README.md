@@ -28,10 +28,11 @@ a terminal and never types a command. Nothing here needs an API key.
 2. Get the scripts, read them, then run them. Three separate steps, never one piped
    command. It is the same on Mac and on Windows (your Bash tool there is Git Bash).
 
-   a. Clone the repo (or update it if it is already there):
+   a. Get the latest copy. This one command works on a fresh machine, on a folder left by an
+      older download, and on a copy that is already there:
 
       ```bash
-      if [ -d ~/str-secrets-summit-prep/.git ]; then git -C ~/str-secrets-summit-prep pull --ff-only; else git clone --depth 1 https://github.com/Solnest-AI/str-secrets-summit-prep ~/str-secrets-summit-prep; fi
+      D=~/str-secrets-summit-prep; [ -d "$D/.git" ] || { mkdir -p "$D" && git -C "$D" init -q && git -C "$D" remote add origin https://github.com/Solnest-AI/str-secrets-summit-prep; }; git -C "$D" fetch -q --depth 1 origin main && git -C "$D" reset -q --hard FETCH_HEAD
       ```
 
    b. Read `~/str-secrets-summit-prep/prep.sh` and `~/str-secrets-summit-prep/prep.py` in

@@ -122,7 +122,8 @@ class Script(unittest.TestCase):
 
     def test_readme_command_and_final_lines_match_the_script(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("git clone --depth 1 https://github.com/Solnest-AI/str-secrets-summit-prep ~/str-secrets-summit-prep", readme)
+        self.assertIn('git -C "$D" remote add origin https://github.com/Solnest-AI/str-secrets-summit-prep', readme)
+        self.assertIn('git -C "$D" fetch -q --depth 1 origin main', readme)
         self.assertIn("bash ~/str-secrets-summit-prep/prep.sh", readme)
         self.assertNotIn("| bash", readme)      # auto mode blocks download-and-run pipes
         self.assertIn("Ask permissions", readme)
