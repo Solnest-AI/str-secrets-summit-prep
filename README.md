@@ -35,6 +35,15 @@ a terminal and never types a command. Nothing here needs an API key.
       D=~/str-secrets-summit-prep; [ -d "$D/.git" ] || { mkdir -p "$D" && git -C "$D" init -q && git -C "$D" remote add origin https://github.com/Solnest-AI/str-secrets-summit-prep; }; git -C "$D" fetch -q --depth 1 origin main && git -C "$D" reset -q --hard FETCH_HEAD
       ```
 
+      **Mac, and that failed with `xcrun: error` or `invalid active developer path`:** Git is not
+      installed yet (it comes with Apple's command line tools, and step 2c opens Apple's installer
+      for them). Get the same scripts without Git, then carry on with 2b. Do not stop to install
+      Git first; nothing in this prep needs it:
+
+      ```bash
+      D=~/str-secrets-summit-prep; mkdir -p "$D" && curl -fsSL -o "$D.tar.gz" https://github.com/Solnest-AI/str-secrets-summit-prep/archive/refs/heads/main.tar.gz && tar -xzf "$D.tar.gz" -C "$D" --strip-components 1 && rm -f "$D.tar.gz"
+      ```
+
    b. Read `~/str-secrets-summit-prep/prep.sh` and `~/str-secrets-summit-prep/prep.py` in
       full before running anything. They install only to `~/.local/bin` and uv's Python
       folder, need no admin password, and read or write no keys.
@@ -55,7 +64,9 @@ a terminal and never types a command. Nothing here needs an API key.
    switch it to **Ask permissions**, then say **set this up** again and click **Allow** when
    I ask to run a command." If they are already in Ask permissions mode, just tell them to
    click **Allow** on the prompt.
-3. Show them the lines it printed, then read the last line:
+3. Show them the lines it printed. A **`⚠️ Git`** line (Mac only) means Apple's installer window
+   just opened: tell them "A window from Apple just opened. Click **Install**, then **Agree**. It
+   finishes on its own in 5 to 15 minutes, and you can leave it running." Then read the last line:
    - **`ALL SET.`** Say: "✅ **You're ready for the summit.** ffmpeg and every tool the
      summit needs are installed. Nothing else to install before Tuesday morning: we set up
      the Revenue Manager and the Content Studio together in the sessions."
@@ -78,7 +89,7 @@ Running it again any time is safe: it only installs what is missing.
 
 | Item | Why | Where |
 |---|---|---|
-| Git | Claude Code uses it (Windows: it is the Bash tool) | checked only; the connections kit installed it |
+| Git | Claude Code uses it (Windows: it is the Bash tool) | checked; a Mac without it gets Apple's installer window (click Install) |
 | Node.js 20+ | runs the tool connections | winget (Windows) or Homebrew (Mac), if missing |
 | uv | runs every Python step, no admin | `~/.local/bin` |
 | Python 3.13 | the summit scripts | through uv; on Windows under `%USERPROFILE%\.uv\python` |

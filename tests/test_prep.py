@@ -4,6 +4,7 @@ import io
 import pathlib
 import re
 import subprocess
+import os
 import sys
 import tarfile
 import tempfile
@@ -131,6 +132,68 @@ class Script(unittest.TestCase):
             self.assertIn(last, readme)
         self.assertNotIn("—", readme)
         self.assertEqual(re.findall(r"\$\d", readme), [])
+
+
+
+def run_git_block(git_stub, win=0, check=0):
+    """Run prep.sh's Git block alone, with `git` and `xcode-select` replaced by stubs, so no test
+    installs anything. Returns (printed lines, BROKEN, whether xcode-select was called)."""
+    text = (ROOT / "prep.sh").read_text(encoding="utf-8")
+    block = text[text.index("# ---------------------------------------------------------------- git --"):
+                 text.index("# --------------------------------------------------------------- node --")]
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        (tmp / "git").write_text("#!/bin/sh\n" + git_stub + "\n", encoding="utf-8")
+        (tmp / "xcode-select").write_text("#!/bin/sh\ntouch \"$(dirname \"$0\")/xcode-select-called\"\n", encoding="utf-8")
+        for f in ("git", "xcode-select"):
+            (tmp / f).chmod(0o755)
+        script = ("ok() { printf 'OK %s\\n' \"$1\"; }\nbad() { printf 'BAD %s\\n' \"$1\"; BROKEN=1; }\n"
+                  "warn() { printf 'WARN %s\\n' \"$1\"; }\nBROKEN=0\n" + block + "\necho \"BROKEN=$BROKEN\"\n")
+        env = dict(os.environ, PATH=f"{tmp}:/usr/bin:/bin", WIN=str(win), CHECK=str(check))
+        out = subprocess.run(["bash", "-c", f"WIN={win}; CHECK={check}; " + script], env=env,
+                             capture_output=True, text=True).stdout
+        return out, "BROKEN=1" in out, (tmp / "xcode-select-called").exists()
+
+
+APPLE_STUB = 'echo "xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools)" >&2; exit 1'
+
+
+class GitCheck(unittest.TestCase):
+    def test_a_working_git_passes_with_its_version(self):
+        out, broken, opened = run_git_block('echo "git version 2.50.1"')
+        self.assertIn("OK Git 2.50.1", out)
+        self.assertFalse(broken)
+        self.assertFalse(opened)
+
+    def test_apples_stub_on_a_mac_warns_and_opens_the_installer(self):
+        out, broken, opened = run_git_block(APPLE_STUB)
+        self.assertNotIn("OK Git", out)         # the 2026-09-28 false pass
+        self.assertIn("WARN Git: Apple's command line tools are missing", out)
+        self.assertFalse(broken)                # a Mac does not need Git once the scripts are here
+        self.assertTrue(opened)
+
+    def test_check_mode_never_opens_the_installer(self):
+        out, broken, opened = run_git_block(APPLE_STUB, check=1)
+        self.assertIn("WARN Git", out)
+        self.assertFalse(opened)
+
+    def test_windows_with_no_git_still_stops(self):
+        out, broken, opened = run_git_block("exit 127", win=1)
+        self.assertIn("BAD Git: not found", out)
+        self.assertTrue(broken)
+        self.assertFalse(opened)
+
+    def test_readme_gets_the_scripts_without_git_on_a_mac(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("invalid active developer path", readme)
+        self.assertIn('curl -fsSL -o "$D.tar.gz" https://github.com/Solnest-AI/str-secrets-summit-prep/archive/refs/heads/main.tar.gz', readme)
+        self.assertIn('tar -xzf "$D.tar.gz" -C "$D" --strip-components 1', readme)
+        self.assertNotIn("| tar", readme)       # a download piped into anything is what auto mode blocks
+
+    def test_winget_names_its_source_and_says_why_it_failed(self):
+        text = (ROOT / "prep.sh").read_text(encoding="utf-8")
+        self.assertIn("winget install --id OpenJS.NodeJS.LTS -e --source winget", text)
+        self.assertIn("winget said:", text)
 
 
 if __name__ == "__main__":
