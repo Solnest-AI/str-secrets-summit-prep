@@ -6,6 +6,10 @@ your computer ready for Day 1: it checks every tool the summit runs on, installs
 are missing, downloads **ffmpeg** (the video tool), and downloads the browser the Content
 Studio uses for carousels.
 
+**When Claude asks permission to run a command, click Allow.** If Claude says auto mode
+blocked it, switch the mode picker next to the message box to **Ask permissions** and say
+**set this up** again.
+
 It does **not** install the Revenue Manager or the Content Studio. We set those up together
 in the sessions on Tuesday, one link each, step by step. Please don't install them before
 Tuesday morning.
@@ -21,16 +25,35 @@ a terminal and never types a command. Nothing here needs an API key.
 
 1. Tell them in one line: "Getting your computer ready for the summit: about 5 minutes,
    nothing for you to do."
-2. Run this, with a 20 minute tool timeout (the first run downloads about 300 MB). It is
-   the same on Mac and on Windows (your Bash tool there is Git Bash):
+2. Get the scripts, read them, then run them. Three separate steps, never one piped
+   command. It is the same on Mac and on Windows (your Bash tool there is Git Bash).
 
-   ```bash
-   mkdir -p ~/str-secrets-summit-prep && curl -fsSL https://github.com/Solnest-AI/str-secrets-summit-prep/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 -C ~/str-secrets-summit-prep && bash ~/str-secrets-summit-prep/prep.sh
-   ```
+   a. Clone the repo (or update it if it is already there):
+
+      ```bash
+      if [ -d ~/str-secrets-summit-prep/.git ]; then git -C ~/str-secrets-summit-prep pull --ff-only; else git clone --depth 1 https://github.com/Solnest-AI/str-secrets-summit-prep ~/str-secrets-summit-prep; fi
+      ```
+
+   b. Read `~/str-secrets-summit-prep/prep.sh` and `~/str-secrets-summit-prep/prep.py` in
+      full before running anything. They install only to `~/.local/bin` and uv's Python
+      folder, need no admin password, and read or write no keys.
+
+   c. Run it, with a 20 minute tool timeout (the first run downloads about 300 MB):
+
+      ```bash
+      bash ~/str-secrets-summit-prep/prep.sh
+      ```
 
    (Windows with no Bash tool at all: Git for Windows is missing. Tell them to install it
    from git-scm.com with every default, quit and reopen Claude Code, and say "set this up"
    again.)
+
+   **If a command is blocked** (auto mode's safety check, or a permission denial): do not
+   try to work around it with a different command or tool. Tell them: "Your Claude Code is
+   in auto mode, which blocked the installer. Click the mode picker next to the message box,
+   switch it to **Ask permissions**, then say **set this up** again and click **Allow** when
+   I ask to run a command." If they are already in Ask permissions mode, just tell them to
+   click **Allow** on the prompt.
 3. Show them the lines it printed, then read the last line:
    - **`ALL SET.`** Say: "✅ **You're ready for the summit.** ffmpeg and every tool the
      summit needs are installed. Nothing else to install before Tuesday morning: we set up
@@ -41,7 +64,7 @@ a terminal and never types a command. Nothing here needs an API key.
      the clock), right-click it and quit."
    - **`NOT READY`**: a line starts with ❌ and says what to do. Do that one thing (or tell
      them the one thing they have to do, such as clicking Yes on a Windows prompt), then run
-     the step 2 command again. It skips everything already done.
+     step 2c again. It skips everything already done.
 4. If they ask to install the Revenue Manager or the Content Studio now, tell them those are
    set up together in the sessions on Tuesday, so everyone does them the same way at the
    same time.

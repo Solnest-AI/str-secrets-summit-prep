@@ -122,7 +122,10 @@ class Script(unittest.TestCase):
 
     def test_readme_command_and_final_lines_match_the_script(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("https://github.com/Solnest-AI/str-secrets-summit-prep/archive/refs/heads/main.tar.gz", readme)
+        self.assertIn("git clone --depth 1 https://github.com/Solnest-AI/str-secrets-summit-prep ~/str-secrets-summit-prep", readme)
+        self.assertIn("bash ~/str-secrets-summit-prep/prep.sh", readme)
+        self.assertNotIn("| bash", readme)      # auto mode blocks download-and-run pipes
+        self.assertIn("Ask permissions", readme)
         for last in ("`ALL SET.`", "`ALL SET, RESTART ONCE`", "`NOT READY`"):
             self.assertIn(last, readme)
         self.assertNotIn("—", readme)
